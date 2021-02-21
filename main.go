@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"./db"
 )
 
 type Article struct {
@@ -23,6 +24,7 @@ func homePage(w http.ResponseWriter, r *http.Request) {
 func handleRequests() {
 	http.HandleFunc("/", homePage)
 	http.HandleFunc("/articles", returnAllArticles)
+	http.HandleFunc("/post",db.Accept_post)
 	log.Fatal(http.ListenAndServe(":8081", nil))
 }
 
