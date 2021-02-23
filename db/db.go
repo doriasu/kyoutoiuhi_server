@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"reflect"
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq" // here
@@ -107,7 +108,17 @@ func insertPost(post POST) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	_, err = db.Query(fmt.Sprintf("update final_edit set last_edit='%s' where user_id='%s';", post.CreatedAT,post.UserID))
+	// 新規投稿の場合final_editにテーブルを作成
+	result, err := db.Query(fmt.Sprintf("select count(*) from final_edit where user_id='%s';",post.UserID))
+	for result.Next() {
+		var countNum int
+		result.Scan(&countNum)
+		if countNum==0{
+			db.Query(fmt.Sprintf("insert into final_edit (user_id,last_edit) values ('%s','%s')",post.UserID,post.CreatedAT))
+		}else{
+			db.Query(fmt.Sprintf("update final_edit set last_edit='%s' where user_id='%s';", post.CreatedAT,post.UserID))
+		}
+	}
 	if err != nil {
 		fmt.Println(err)
 	}
