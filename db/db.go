@@ -54,16 +54,25 @@ func init() {
 func Getrequest(w http.ResponseWriter, r *http.Request) {
 	var getRequest GET
 	json.NewDecoder(r.Body).Decode(&getRequest)
-	getFromdb(getRequest)
+	result := getFromdb(getRequest)
+
+	res, err := json.Marshal(result)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(res)
 
 }
-func getFromdb(get GET) {
+func getFromdb(get GET) []POST {
 	Env_load()
 	db, err := sql.Open("postgres", fmt.Sprintf("host=localhost port=5432 user=%s password=%s dbname=kyoutoiuhi", os.Getenv("USER_NAME"), os.Getenv("PASSWORD")))
 	if err != nil {
 		fmt.Println(err)
 	}
-	result,err:=db.Query(fmt.Sprintf("select * from post where DATE(created_at) >= '%d-%d-1' and DATE(created_at)<'%d-%d-1'",get.Year,get.Month,get.Year,get.Month+1))
+	result, err := db.Query(fmt.Sprintf("select * from post where DATE(created_at) >= '%d-%d-1' and DATE(created_at)<'%d-%d-1'", get.Year, get.Month, get.Year, get.Month+1))
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -75,6 +84,7 @@ func getFromdb(get GET) {
 		posts = append(posts, post)
 	}
 	fmt.Println(posts)
+	return posts
 
 }
 
