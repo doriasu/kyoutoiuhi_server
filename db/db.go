@@ -107,6 +107,10 @@ func insertPost(post POST) {
 	if err != nil {
 		fmt.Println(err)
 	}
+	_, err = db.Query(fmt.Sprintf("update final_edit set last_edit='%s' where user_id='%s';", post.CreatedAT,post.UserID))
+	if err != nil {
+		fmt.Println(err)
+	}
 	defer db.Close()
 	return
 
