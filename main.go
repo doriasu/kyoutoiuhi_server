@@ -24,7 +24,8 @@ func homePage(w http.ResponseWriter, r *http.Request) {
 func handleRequests() {
 	http.HandleFunc("/", homePage)
 	http.HandleFunc("/articles", returnAllArticles)
-	http.HandleFunc("/post",db.Accept_post)
+	http.HandleFunc("/post",db.Acceptpost)
+	http.HandleFunc("/get",db.Getrequest)
 	log.Fatal(http.ListenAndServe(":8081", nil))
 }
 

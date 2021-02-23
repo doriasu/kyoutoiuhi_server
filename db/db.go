@@ -19,6 +19,11 @@ type POST struct {
 	Evaluation int    `json:"evaluation"`
 	Comment    string `json:"comment"`
 }
+type GET struct {
+	UserID string `json:"user_id"`
+	Year   int    `json:year`
+	Month  int    `json:month`
+}
 
 func Env_load() {
 	err := godotenv.Load()
@@ -44,23 +49,37 @@ func init() {
 	}
 
 }
-func Accept_post(w http.ResponseWriter, r *http.Request) {
-	// request bodyの読み取り
-	// b, err := ioutil.ReadAll(r.Body)
-	// if err != nil {
-	// 	fmt.Println("io error")
-	// 	return
-	// }
 
-	// // jsonのdecode
-	// jsonBytes := ([]byte)(b)
-	// data := new(POST)
-	// if err := json.Unmarshal(jsonBytes, &data); err != nil {
-	// 	fmt.Println("JSON Unmarshal error:", err)
-	// 	fmt.Fprintln(w, "うまく行きませんでした")
-	// 	return
-	// }
-	// fmt.Println(r.Body)
+//Getrequest カレンダー取得リクエストを受ける
+func Getrequest(w http.ResponseWriter, r *http.Request) {
+	var getRequest GET
+	json.NewDecoder(r.Body).Decode(&getRequest)
+	getFromdb(getRequest)
+
+}
+func getFromdb(get GET) {
+	Env_load()
+	db, err := sql.Open("postgres", fmt.Sprintf("host=localhost port=5432 user=%s password=%s dbname=kyoutoiuhi", os.Getenv("USER_NAME"), os.Getenv("PASSWORD")))
+	if err != nil {
+		fmt.Println(err)
+	}
+	result,err:=db.Query(fmt.Sprintf("select * from post where DATE(created_at) >= '%d-%d-1' and DATE(created_at)<'%d-%d-1'",get.Year,get.Month,get.Year,get.Month+1))
+	if err != nil {
+		fmt.Println(err)
+	}
+	// fmt.Println(fmt.Sprintf("select * from post where DATE(created_at) >= '2021-%d-1' and DATE(created_at)<'2021-%d-1';",get.Month,get.Month+1))
+	var posts []POST
+	for result.Next() {
+		var post POST
+		result.Scan(&post.PostID, &post.CreatedAT, &post.UserID, &post.Evaluation, &post.Comment)
+		posts = append(posts, post)
+	}
+	fmt.Println(posts)
+
+}
+
+//Acceptpost 書き込むためのpostリクエストを受ける
+func Acceptpost(w http.ResponseWriter, r *http.Request) {
 	var data POST
 	json.NewDecoder(r.Body).Decode(&data)
 	fmt.Println(data.Comment)
